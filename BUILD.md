@@ -7,10 +7,14 @@ cd pedalboard
 ##### nix-shell --pure
 python -m venv .venv
 source .venv/bin/activate
-pip3 install pybind11 tox
+pip3 install pybind11 tox twine
 
 # BUILD
 pip3 install .
 # OR
 python3 setup.py build_ext --inplace
+
+# PACKAGE+UPLOAD
+python setup.py sdist
+python -m twine upload dist/*
 ```

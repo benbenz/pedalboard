@@ -324,10 +324,10 @@ version_file_contents = (this_directory / "pedalboard" / "version.py").read_text
 exec(version_file_contents, version)
 
 setup(
-    name="pedalboard",
+    name="pedalboard-benbenz",
     version=version["__version__"],
-    author="Peter Sobot",
-    author_email="psobot@spotify.com",
+    author="Ben",
+    author_email="benbenz@sxnths.com",
     description="A Python library for adding effects to audio.",
     long_description=long_description,
     long_description_content_type="text/markdown",
