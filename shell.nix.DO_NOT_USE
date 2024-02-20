@@ -46,9 +46,11 @@ pkgs.mkShell {
     frameworks.WebKit
   ];
 
+# exports for PyBind11 ...
+
   shellHook = ''
-#    export CC=${pkgs.gcc}/bin/gcc
-#    export CXX=${pkgs.gcc}/bin/g++
+    export CC=${pkgs.clang}/bin/clang
+    export CXX=${pkgs.clang}/bin/clang++
 #    export CMAKE_C_COMPILER=${pkgs.gcc}/bin/gcc
 #    export CMAKE_CXX_COMPILER=${pkgs.gcc}/bin/g++
 #    export DYLD_LIBRARY_PATH=$(clang -print-resource-dir)/lib/:$DYLD_LIBRARY_PATH
@@ -60,14 +62,7 @@ pkgs.mkShell {
 #    export CPLUS_INCLUDE_PATH=$(clang -print-resource-dir)/include/
 #    export CUSTOM_CPP_INCLUDE_PATH=${llvm.libcxx}
 #    export CUSTOM_CPP_INCLUDE_PATH=$(clang -print-resource-dir)/include/
-#    export CC=/Users/ben/dev/llvm/clang+llvm-17.0.1-arm64-apple-darwin22.0/bin/clang
-#    export CXX=/Users/ben/dev/llvm/clang+llvm-17.0.1-arm64-apple-darwin22.0/bin/clang++
-#    export DYLD_LIBRARY_PATH=/Users/ben/dev/llvm/clang+llvm-17.0.1-arm64-apple-darwin22.0/lib
-#    export LD_LIBRARY_PATH=/Users/ben/dev/llvm/clang+llvm-17.0.1-arm64-apple-darwin22.0/lib
-#    export LD=/Users/ben/dev/llvm/clang+llvm-17.0.1-arm64-apple-darwin22.0/bin/ld64.lld
-#    export LINKXX=/Users/ben/dev/llvm/clang+llvm-17.0.1-arm64-apple-darwin22.0/bin/clang++
-#    export LINK=/Users/ben/dev/llvm/clang+llvm-17.0.1-arm64-apple-darwin22.0/bin/clang
-
+    export CLANG_LIB_DIR=$(clang -print-resource-dir)/lib/
   '';  
 }
 
