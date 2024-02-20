@@ -125,6 +125,8 @@ ALL_INCLUDES += [
 ALL_SOURCE_PATHS += [p for p in Path("vendors/libgsm/src").glob("*.c") if "toast" not in p.name]
 ALL_INCLUDES += ["vendors/libgsm/inc"]
 
+# @TODO: fix this. We need to find this package thorugh the nix-shell env...
+ALL_CPPFLAGS.append("-I/nix/store/zc0d3xpjdfxbbaalcvki4n3hypc1v181-libcxx-14.0.6-dev/include/c++/v1/")
 
 # Add platform-specific flags:
 if platform.system() == "Darwin":
