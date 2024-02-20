@@ -9,6 +9,7 @@ pedalboard._pedalboard.WeakTypeWrapper@\d+
 pedalboard._pedalboard._AudioProcessorParameter.__init__
 pedalboard._pedalboard.Pedalboard
 pedalboard._pedalboard.VST3Plugin
+pedalboard._pedalboard.VSTPlugin
 pedalboard.utils.Chain
 pedalboard.utils.Mix
 pedalboard.utils.__all__

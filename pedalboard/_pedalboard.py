@@ -218,7 +218,7 @@ def get_text_for_raw_value(
 class AudioProcessorParameter(object):
     """
     A wrapper around various different parameters exposed by
-    :class:`VST3Plugin` or :class:`AudioUnitPlugin` instances.
+    :class:`VST3Plugin` or  :class:`VSTPlugin` or :class:`AudioUnitPlugin` instances.
 
     :class:`AudioProcessorParameter` objects are rarely used directly,
     and usually used via their implicit interface::
@@ -697,6 +697,14 @@ except ImportError:
     pass
 
 try:
+    from pedalboard_native import VSTPlugin  # type: ignore
+
+    _AVAILABLE_PLUGIN_CLASSES.append(VSTPlugin)
+except ImportError:
+    # We may be on a system that doesn't have native VSTPlugin support.
+    pass
+
+try:
     from pedalboard_native import AudioUnitPlugin  # type: ignore
 
     _AVAILABLE_PLUGIN_CLASSES.append(AudioUnitPlugin)
@@ -717,10 +725,11 @@ def load_plugin(
 
     Two plugin formats are supported:
      - VST3® format is supported on macOS, Windows, and Linux
+     - VST® format is supported on macOS, Windows, and Linux
      - Audio Units are supported on macOS
 
     Args:
-        path_to_plugin_file (``str``): The path of a VST3® or Audio Unit plugin file or bundle.
+        path_to_plugin_file (``str``): The path of a VST3® or VST® or Audio Unit plugin file or bundle.
 
         parameter_values (``Dict[str, Union[str, int, float, bool]]``):
             An optional dictionary of initial values to provide to the plugin

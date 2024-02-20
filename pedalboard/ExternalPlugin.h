@@ -30,6 +30,7 @@
 #include <pybind11/stl.h>
 
 #include "juce_overrides/juce_PatchedVST3PluginFormat.h"
+//#include "juce_overrides/juce_PatchedVSTPluginFormat.h"
 #include "process.h"
 
 #if JUCE_MAC
@@ -1591,6 +1592,122 @@ example: a Windows VST3 plugin bundle will not load on Linux or macOS.)
            py::arg("reset") = true)
       .def("__call__",
            &ExternalPlugin<juce::PatchedVST3PluginFormat>::renderMIDIMessages,
+           "Run an audio or MIDI buffer through this plugin, returning "
+           "audio. Alias for :py:meth:`process`.",
+           py::arg("midi_messages"), py::arg("duration"),
+           py::arg("sample_rate"), py::arg("num_channels") = 2,
+           py::arg("buffer_size") = DEFAULT_BUFFER_SIZE,
+           py::arg("reset") = true);
+#endif
+
+
+#if (JUCE_MAC || JUCE_WINDOWS || JUCE_LINUX)
+  py::class_<ExternalPlugin<juce::VSTPluginFormat>,
+             AbstractExternalPlugin,
+             std::shared_ptr<ExternalPlugin<juce::VSTPluginFormat>>>(
+      m, "VSTPlugin",
+      R"(A wrapper around third-party, audio effect or instrument plugins in
+`Steinberg GmbH's VST® <https://en.wikipedia.org/wiki/Virtual_Studio_Technology>`_
+format.
+
+VST® plugins are supported on macOS, Windows, and Linux. However, VST® plugin
+files are not cross-compatible with different operating systems; a platform-specific
+build of each plugin is required to load that plugin on a given platform. (For
+example: a Windows VST plugin bundle will not load on Linux or macOS.)
+
+*Support for instrument plugins introduced in v0.7.4.*
+)")
+      .def(
+          py::init([](std::string &pathToPluginFile, py::object parameterValues,
+                      std::optional<std::string> pluginName,
+                      float initializationTimeout) {
+            std::shared_ptr<ExternalPlugin<juce::VSTPluginFormat>>
+                plugin = std::make_shared<
+                    ExternalPlugin<juce::VSTPluginFormat>>(
+                    pathToPluginFile, pluginName, initializationTimeout);
+            py::cast(plugin).attr("__set_initial_parameter_values__")(
+                parameterValues);
+            return plugin;
+          }),
+          py::arg("path_to_plugin_file"),
+          py::arg("parameter_values") = py::none(),
+          py::arg("plugin_name") = py::none(),
+          py::arg("initialization_timeout") =
+              DEFAULT_INITIALIZATION_TIMEOUT_SECONDS)
+      .def("__repr__",
+           [](ExternalPlugin<juce::VSTPluginFormat> &plugin) {
+             std::ostringstream ss;
+             ss << "<pedalboard.VSTPlugin";
+             ss << " \"" << plugin.getName() << "\"";
+             ss << " at " << &plugin;
+             ss << ">";
+             return ss.str();
+           })
+      .def("load_preset",
+           &ExternalPlugin<juce::VSTPluginFormat>::loadPresetData,
+           "Load a VST preset file in .vstpreset format.",
+           py::arg("preset_file_path"))
+      .def_static(
+          "get_plugin_names_for_file",
+          [](std::string filename) {
+            return getPluginNamesForFile<juce::VSTPluginFormat>(
+                filename);
+          },
+          "Return a list of plugin names contained within a given VST "
+          "plugin (i.e.: a \".vst\"). If the provided file cannot be "
+          "scanned, "
+          "an ImportError will be raised.")
+      .def_property_readonly_static(
+          "installed_plugins",
+          [](py::object /* cls */) { return findInstalledVSTPluginPaths(); },
+          "Return a list of paths to VST plugins installed in the default "
+          "location on this system. This list may not be exhaustive, and "
+          "plugins in this list are not guaranteed to be compatible with "
+          "Pedalboard.")
+      .def_property_readonly(
+          "name",
+          [](ExternalPlugin<juce::VSTPluginFormat> &plugin) {
+            return plugin.getName().toStdString();
+          },
+          "The name of this plugin.")
+      .def_property_readonly(
+          "_parameters",
+          &ExternalPlugin<juce::VSTPluginFormat>::getParameters,
+          py::return_value_policy::reference_internal)
+      .def("_get_parameter",
+           &ExternalPlugin<juce::VSTPluginFormat>::getParameter,
+           py::return_value_policy::reference_internal)
+      .def("show_editor",
+           &ExternalPlugin<juce::VSTPluginFormat>::showEditor,
+           SHOW_EDITOR_DOCSTRING, py::arg("close_event") = py::none())
+      .def(
+          "process",
+          [](std::shared_ptr<Plugin> self, const py::array inputArray,
+             double sampleRate, unsigned int bufferSize, bool reset) {
+            return process(inputArray, sampleRate, {self}, bufferSize, reset);
+          },
+          EXTERNAL_PLUGIN_PROCESS_DOCSTRING, py::arg("input_array"),
+          py::arg("sample_rate"), py::arg("buffer_size") = DEFAULT_BUFFER_SIZE,
+          py::arg("reset") = true)
+      .def(
+          "__call__",
+          [](std::shared_ptr<Plugin> self, const py::array inputArray,
+             double sampleRate, unsigned int bufferSize, bool reset) {
+            return process(inputArray, sampleRate, {self}, bufferSize, reset);
+          },
+          "Run an audio or MIDI buffer through this plugin, returning "
+          "audio. Alias for :py:meth:`process`.",
+          py::arg("input_array"), py::arg("sample_rate"),
+          py::arg("buffer_size") = DEFAULT_BUFFER_SIZE, py::arg("reset") = true)
+      .def("process",
+           &ExternalPlugin<juce::VSTPluginFormat>::renderMIDIMessages,
+           EXTERNAL_PLUGIN_PROCESS_DOCSTRING, py::arg("midi_messages"),
+           py::arg("duration"), py::arg("sample_rate"),
+           py::arg("num_channels") = 2,
+           py::arg("buffer_size") = DEFAULT_BUFFER_SIZE,
+           py::arg("reset") = true)
+      .def("__call__",
+           &ExternalPlugin<juce::VSTPluginFormat>::renderMIDIMessages,
            "Run an audio or MIDI buffer through this plugin, returning "
            "audio. Alias for :py:meth:`process`.",
            py::arg("midi_messages"), py::arg("duration"),

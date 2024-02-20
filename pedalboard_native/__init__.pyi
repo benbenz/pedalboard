@@ -62,6 +62,7 @@ __all__ = [
     "Resample",
     "Reverb",
     "VST3Plugin",
+    "VSTPlugin",
     "io",
     "process",
     "utils",
@@ -346,7 +347,7 @@ class ExternalPlugin(Plugin):
     """
     A wrapper around a third-party effect plugin.
 
-    Don't use this directly; use one of :class:`pedalboard.VST3Plugin` or :class:`pedalboard.AudioUnitPlugin` instead.
+    Don't use this directly; use one of :class:`pedalboard.VST3Plugin` or :class:`pedalboard.VSTPlugin` or :class:`pedalboard.AudioUnitPlugin` instead.
     """
 
     @typing.overload
@@ -1426,6 +1427,292 @@ class VST3Plugin(ExternalPlugin):
     def load_preset(self, preset_file_path: str) -> None:
         """
         Load a VST3 preset file in .vstpreset format.
+        """
+    @typing.overload
+    def process(
+        self,
+        input_array: numpy.ndarray,
+        sample_rate: float,
+        buffer_size: int = 8192,
+        reset: bool = True,
+    ) -> numpy.ndarray[typing.Any, numpy.dtype[numpy.float32]]:
+        """
+        Pass a buffer of audio (as a 32- or 64-bit NumPy array) *or* a list of
+        MIDI messages to this plugin, returning audio.
+
+        (If calling this multiple times with multiple effect plugins, consider
+        creating a :class:`pedalboard.Pedalboard` object instead.)
+
+        When provided audio as input, the returned array may contain up to (but not
+        more than) the same number of samples as were provided. If fewer samples
+        were returned than expected, the plugin has likely buffered audio inside
+        itself. To receive the remaining audio, pass another audio buffer into
+        ``process`` with ``reset`` set to ``True``.
+
+        If the provided buffer uses a 64-bit datatype, it will be converted to 32-bit
+        for processing.
+
+        If provided MIDI messages as input, the provided ``midi_messages`` must be
+        a Python ``List`` containing one of the following types:
+
+         - Objects with a ``bytes()`` method and ``time`` property (such as :doc:`mido:messages`
+           from :doc:`mido:index`, not included with Pedalboard)
+         - Tuples that look like: ``(midi_bytes: bytes, timestamp_in_seconds: float)``
+         - Tuples that look like: ``(midi_bytes: List[int], timestamp_in_seconds: float)``
+
+        The returned array will contain ``duration`` seconds worth of audio at the
+        provided ``sample_rate``.
+
+        Each MIDI message will be sent to the plugin at its
+        timestamp, where a timestamp of ``0`` indicates the start of the buffer, and
+        a timestamp equal to ``duration`` indicates the end of the buffer. (Any MIDI
+        messages whose timestamps are greater than ``duration`` will be ignored.)
+
+        The provided ``buffer_size`` argument will be used to control the size of
+        each chunk of audio returned by the plugin at once. Higher buffer sizes may
+        speed up processing, but may cause increased memory usage.
+
+        The ``reset`` flag determines if this plugin should be reset before
+        processing begins, clearing any state from previous calls to ``process``.
+        If calling ``process`` multiple times while processing the same audio or
+        MIDI stream, set ``reset`` to ``False``.
+
+        .. note::
+            The :py:meth:`process` method can also be used via :py:meth:`__call__`;
+            i.e.: just calling this object like a function (``my_plugin(...)``) will
+            automatically invoke :py:meth:`process` with the same arguments.
+
+
+        Examples
+        --------
+
+        Running audio through an external effect plugin::
+
+           from pedalboard import load_plugin
+           from pedalboard.io import AudioFile
+
+           plugin = load_plugin("../path-to-my-plugin-file")
+           assert plugin.is_effect
+           with AudioFile("input-audio.wav") as f:
+               output_audio = plugin(f.read(), f.samplerate)
+
+
+        Rendering MIDI via an external instrument plugin::
+
+           from pedalboard import load_plugin
+           from pedalboard.io import AudioFile
+           from mido import Message # not part of Pedalboard, but convenient!
+
+           plugin = load_plugin("../path-to-my-plugin-file")
+           assert plugin.is_instrument
+
+           sample_rate = 44100
+           num_channels = 2
+           with AudioFile("output-audio.wav", "w", sample_rate, num_channels) as f:
+               f.write(plugin(
+                   [Message("note_on", note=60), Message("note_off", note=60, time=4)],
+                   sample_rate=sample_rate,
+                   duration=5,
+                   num_channels=num_channels
+               ))
+
+
+        *Support for instrument plugins introduced in v0.7.4.*
+
+
+
+        Pass a buffer of audio (as a 32- or 64-bit NumPy array) *or* a list of
+        MIDI messages to this plugin, returning audio.
+
+        (If calling this multiple times with multiple effect plugins, consider
+        creating a :class:`pedalboard.Pedalboard` object instead.)
+
+        When provided audio as input, the returned array may contain up to (but not
+        more than) the same number of samples as were provided. If fewer samples
+        were returned than expected, the plugin has likely buffered audio inside
+        itself. To receive the remaining audio, pass another audio buffer into
+        ``process`` with ``reset`` set to ``True``.
+
+        If the provided buffer uses a 64-bit datatype, it will be converted to 32-bit
+        for processing.
+
+        If provided MIDI messages as input, the provided ``midi_messages`` must be
+        a Python ``List`` containing one of the following types:
+
+         - Objects with a ``bytes()`` method and ``time`` property (such as :doc:`mido:messages`
+           from :doc:`mido:index`, not included with Pedalboard)
+         - Tuples that look like: ``(midi_bytes: bytes, timestamp_in_seconds: float)``
+         - Tuples that look like: ``(midi_bytes: List[int], timestamp_in_seconds: float)``
+
+        The returned array will contain ``duration`` seconds worth of audio at the
+        provided ``sample_rate``.
+
+        Each MIDI message will be sent to the plugin at its
+        timestamp, where a timestamp of ``0`` indicates the start of the buffer, and
+        a timestamp equal to ``duration`` indicates the end of the buffer. (Any MIDI
+        messages whose timestamps are greater than ``duration`` will be ignored.)
+
+        The provided ``buffer_size`` argument will be used to control the size of
+        each chunk of audio returned by the plugin at once. Higher buffer sizes may
+        speed up processing, but may cause increased memory usage.
+
+        The ``reset`` flag determines if this plugin should be reset before
+        processing begins, clearing any state from previous calls to ``process``.
+        If calling ``process`` multiple times while processing the same audio or
+        MIDI stream, set ``reset`` to ``False``.
+
+        .. note::
+            The :py:meth:`process` method can also be used via :py:meth:`__call__`;
+            i.e.: just calling this object like a function (``my_plugin(...)``) will
+            automatically invoke :py:meth:`process` with the same arguments.
+
+
+        Examples
+        --------
+
+        Running audio through an external effect plugin::
+
+           from pedalboard import load_plugin
+           from pedalboard.io import AudioFile
+
+           plugin = load_plugin("../path-to-my-plugin-file")
+           assert plugin.is_effect
+           with AudioFile("input-audio.wav") as f:
+               output_audio = plugin(f.read(), f.samplerate)
+
+
+        Rendering MIDI via an external instrument plugin::
+
+           from pedalboard import load_plugin
+           from pedalboard.io import AudioFile
+           from mido import Message # not part of Pedalboard, but convenient!
+
+           plugin = load_plugin("../path-to-my-plugin-file")
+           assert plugin.is_instrument
+
+           sample_rate = 44100
+           num_channels = 2
+           with AudioFile("output-audio.wav", "w", sample_rate, num_channels) as f:
+               f.write(plugin(
+                   [Message("note_on", note=60), Message("note_off", note=60, time=4)],
+                   sample_rate=sample_rate,
+                   duration=5,
+                   num_channels=num_channels
+               ))
+
+
+        *Support for instrument plugins introduced in v0.7.4.*
+
+        """
+    @typing.overload
+    def process(
+        self,
+        midi_messages: object,
+        duration: float,
+        sample_rate: float,
+        num_channels: int = 2,
+        buffer_size: int = 8192,
+        reset: bool = True,
+    ) -> numpy.ndarray[typing.Any, numpy.dtype[numpy.float32]]: ...
+    def show_editor(self, close_event: typing.Optional[threading.Event] = None) -> None:
+        """
+        Show the UI of this plugin as a native window.
+
+        This method may only be called on the main thread, and will block
+        the main thread until any of the following things happens:
+
+         - the window is closed by clicking the close button
+         - the window is closed by pressing the appropriate (OS-specific) keyboard shortcut
+         - a KeyboardInterrupt (Ctrl-C) is sent to the program
+         - the :py:meth:`threading.Event.set` method is called (by another thread)
+           on a provided :py:class:`threading.Event` object
+
+        An example of how to programmatically close an editor window::
+
+           import pedalboard
+           from threading import Event, Thread
+
+           plugin = pedalboard.load_plugin("../path-to-my-plugin-file")
+           close_window_event = Event()
+
+           def other_thread():
+               # do something to determine when to close the window
+               if should_close_window:
+                   close_window_event.set()
+
+           thread = Thread(target=other_thread)
+           thread.run()
+
+           # This will block until the other thread calls .set():
+           plugin.show_editor(close_window_event)
+        """
+    @property
+    def _parameters(self) -> typing.List[_AudioProcessorParameter]:
+        """ """
+    @property
+    def name(self) -> str:
+        """
+        The name of this plugin.
+
+
+        """
+    pass
+
+
+class VSTPlugin(ExternalPlugin):
+    """
+    A wrapper around third-party, audio effect or instrument plugins in
+    `Steinberg GmbH's VST® <https://en.wikipedia.org/wiki/Virtual_Studio_Technology>`_
+    format.
+
+    VST® plugins are supported on macOS, Windows, and Linux. However, VST® plugin
+    files are not cross-compatible with different operating systems; a platform-specific
+    build of each plugin is required to load that plugin on a given platform. (For
+    example: a Windows VST plugin bundle will not load on Linux or macOS.)
+
+    *Support for instrument plugins introduced in v0.7.4.*
+    """
+
+    @typing.overload
+    def __call__(
+        self,
+        input_array: numpy.ndarray,
+        sample_rate: float,
+        buffer_size: int = 8192,
+        reset: bool = True,
+    ) -> numpy.ndarray[typing.Any, numpy.dtype[numpy.float32]]:
+        """
+        Run an audio or MIDI buffer through this plugin, returning audio. Alias for :py:meth:`process`.
+
+        Run an audio or MIDI buffer through this plugin, returning audio. Alias for :py:meth:`process`.
+        """
+    @typing.overload
+    def __call__(
+        self,
+        midi_messages: object,
+        duration: float,
+        sample_rate: float,
+        num_channels: int = 2,
+        buffer_size: int = 8192,
+        reset: bool = True,
+    ) -> numpy.ndarray[typing.Any, numpy.dtype[numpy.float32]]: ...
+    def __init__(
+        self,
+        path_to_plugin_file: str,
+        parameter_values: object = None,
+        plugin_name: typing.Optional[str] = None,
+        initialization_timeout: float = 10.0,
+    ) -> None: ...
+    def __repr__(self) -> str: ...
+    def _get_parameter(self, arg0: str) -> _AudioProcessorParameter: ...
+    @staticmethod
+    def get_plugin_names_for_file(arg0: str) -> typing.List[str]:
+        """
+        Return a list of plugin names contained within a given VST plugin (i.e.: a ".vst"). If the provided file cannot be scanned, an ImportError will be raised.
+        """
+    def load_preset(self, preset_file_path: str) -> None:
+        """
+        Load a VST preset file in .vstpreset format.
         """
     @typing.overload
     def process(
