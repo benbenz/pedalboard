@@ -33,9 +33,22 @@
 //#include "juce_overrides/juce_PatchedVSTPluginFormat.h"
 #include "process.h"
 
+
+// for image capture
+// #include "juce_graphics/images/juce_Image.h"
+// #include "juce_graphics/geometry/juce_Rectangle.h"
+#include "juce_graphics/juce_graphics.h"
+
 #if JUCE_MAC
 #include <AudioToolbox/AudioUnitUtilities.h>
 #endif
+
+// @benbenz: hack of window rendering
+// https://forum.juce.com/t/rendering-window-contents-to-image-file/12820/9
+namespace juce
+{
+    Image createSnapshotOfNativeWindow (void* nativeWindowHandle);
+}
 
 namespace Pedalboard {
 
@@ -1297,6 +1310,81 @@ public:
     StandalonePluginWindow::openWindowAndWait(*pluginInstance, optionalEvent);
   }
 
+
+  py::array_t<uint8> capture() {
+
+    //std::scoped_lock<std::mutex>(this->mutex);
+
+    py::array_t<uint8_t> outputArray ;
+
+    if (pluginInstance) {
+      //juce::AudioProcessorEditor* editor = pluginInstance->createEditorIfNeeded();
+      // int width = editor->getWidth();
+      // int height = editor->getHeight();
+      
+      // attempt 1
+      //juce::Rectangle rect = juce::Rectangle(0,0,width,height);
+      //juce::Image img = editor->createComponentSnapshot(rect);
+
+      // attempt 2
+      //juce::Image img = juce::Image(juce::Image::PixelFormat::RGB, width, height, true);
+      //juce::Graphics graphics = juce::Graphics(img);
+      //editor->paintEntireComponent(graphics,true);
+      //editor->repaint();
+      //juce::MessageManager::getInstance()->runDispatchLoopUntil(10);
+
+      // attempt3
+      //COmponent::createNewPeer
+      juce::Image img ;
+      //not available in v6
+      //juce::ComponentPeer::StyleFlags::windowRequiresSynchronousCoreGraphicsRendering
+      int flags = 0 ; 
+      //editor->setOpaque(true);
+      //editor->addToDesktop(flags);
+      //StandalonePluginWindow window(*pluginInstance);
+      //window.show();
+      this->showEditor(py::none());
+      juce::AudioProcessorEditor* editor = pluginInstance->getActiveEditor();
+      juce::ComponentPeer* peer = editor->getPeer();
+      if(peer!=nullptr) {
+        img = juce::createSnapshotOfNativeWindow(peer->getNativeHandle());
+      }
+      else { 
+        std::cout << "NO PEER FOUND" << std::endl ;
+        return outputArray;
+      }      
+
+      // attempt4
+      // juce::Image img = juce::Image(juce::Image::PixelFormat::RGB, width, height, true);
+      // juce::Graphics graphics = juce::Graphics(img);
+      // editor->paint(graphics);
+
+      int width = img.getWidth();
+      int height = img.getHeight();
+
+      juce::Image::BitmapData bm_data = juce::Image::BitmapData(img,juce::Image::BitmapData::ReadWriteMode::readOnly);
+
+      int numbytes = bm_data.pixelStride;
+      //int len = bm_data.width*bm_data.height;
+      outputArray = py::array_t<uint8_t>({height,width,numbytes});
+      
+      // Get a mutable reference to the output array's buffer
+      auto outputBuffer = outputArray.mutable_unchecked<3>(); // For 3D array: height x width x channels
+
+      for (int y = 0; y < height; ++y) {
+            const uint8_t* rowData = bm_data.getLinePointer(y);
+            for (int x = 0; x < width; ++x) {
+                for (int c = 0; c < bm_data.pixelStride; ++c) {
+                    // Copy each byte of the pixel data
+                    outputBuffer(y, x, c) = rowData[x * bm_data.pixelStride + c];
+                }
+            }
+        }
+    }
+
+    return outputArray;
+  }  
+
 private:
   constexpr static int ExternalLoadSampleRate = 44100,
                        ExternalLoadMaximumBlockSize = 8192;
@@ -1608,7 +1696,10 @@ example: a Windows VST3 plugin bundle will not load on Linux or macOS.)
            py::arg("midi_messages"), py::arg("duration"),
            py::arg("sample_rate"), py::arg("num_channels") = 2,
            py::arg("buffer_size") = DEFAULT_BUFFER_SIZE,
-           py::arg("reset") = true);
+           py::arg("reset") = true)
+      .def("capture",
+           &ExternalPlugin<juce::PatchedVST3PluginFormat>::capture,
+           "Capture the plugin window");           
 #endif
 
 
@@ -1730,7 +1821,10 @@ example: a Windows VST plugin bundle will not load on Linux or macOS.)
            py::arg("midi_messages"), py::arg("duration"),
            py::arg("sample_rate"), py::arg("num_channels") = 2,
            py::arg("buffer_size") = DEFAULT_BUFFER_SIZE,
-           py::arg("reset") = true);
+           py::arg("reset") = true)
+      .def("capture",
+           &ExternalPlugin<juce::VSTPluginFormat>::capture,
+           "Capture the plugin window");           
 #endif
 
 #if JUCE_PLUGINHOST_AU && JUCE_MAC
@@ -1856,7 +1950,10 @@ see :class:`pedalboard.VST3Plugin`.)
            py::arg("midi_messages"), py::arg("duration"),
            py::arg("sample_rate"), py::arg("num_channels") = 2,
            py::arg("buffer_size") = DEFAULT_BUFFER_SIZE,
-           py::arg("reset") = true);
+           py::arg("reset") = true)
+      .def("capture",
+           &ExternalPlugin<juce::AudioUnitPluginFormat>::capture,
+           "Capture the plugin window");           
 #endif
 }
 
