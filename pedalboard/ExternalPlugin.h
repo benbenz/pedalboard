@@ -803,6 +803,11 @@ public:
     return pluginInstance ? pluginInstance->getName() : "<unknown>";
   }
 
+  const juce::String getCurrentProgramName() const {
+    int pgm = pluginInstance->getCurrentProgram();
+    return pluginInstance->getProgramName(pgm);
+  }
+
   const int getNumChannels() const {
     // Input and output channel counts should match.
     if (!pluginInstance) {
@@ -1555,6 +1560,12 @@ example: a Windows VST3 plugin bundle will not load on Linux or macOS.)
           },
           "The name of this plugin.")
       .def_property_readonly(
+          "current_program_name",
+          [](ExternalPlugin<juce::PatchedVST3PluginFormat> &plugin) {
+            return plugin.getCurrentProgramName().toStdString();
+          },
+          "The name of the current program of the plugin.")
+      .def_property_readonly(
           "_parameters",
           &ExternalPlugin<juce::PatchedVST3PluginFormat>::getParameters,
           py::return_value_policy::reference_internal)
@@ -1670,6 +1681,12 @@ example: a Windows VST plugin bundle will not load on Linux or macOS.)
             return plugin.getName().toStdString();
           },
           "The name of this plugin.")
+      .def_property_readonly(
+          "current_program_name",
+          [](ExternalPlugin<juce::VSTPluginFormat> &plugin) {
+            return plugin.getCurrentProgramName().toStdString();
+          },
+          "The name of the current program of the plugin.")
       .def_property_readonly(
           "_parameters",
           &ExternalPlugin<juce::VSTPluginFormat>::getParameters,
@@ -1790,6 +1807,12 @@ see :class:`pedalboard.VST3Plugin`.)
             return plugin.getName().toStdString();
           },
           "The name of this plugin, as reported by the plugin itself.")
+      .def_property_readonly(
+          "current_program_name",
+          [](ExternalPlugin<juce::AudioUnitPluginFormat> &plugin) {
+            return plugin.getCurrentProgramName().toStdString();
+          },
+          "The name of the current program of the plugin.")
       .def_property_readonly(
           "_parameters",
           &ExternalPlugin<juce::AudioUnitPluginFormat>::getParameters,
