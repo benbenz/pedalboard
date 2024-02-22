@@ -18,7 +18,7 @@ python3 setup.py build_ext --inplace
 pip3 install twine wheel
 # source-based bpackage
 python setup.py sdist
+# binary-based package
+python setup.py bdist_wheel
 python -m twine upload dist/*
-# binary
-
 ```
