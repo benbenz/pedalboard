@@ -436,6 +436,94 @@ public:
     }
   }
 
+  /**
+   * Open a native window to show a given AudioProcessor's editor UI,
+   * pumping the juce::MessageManager run loop as necessary to service
+   * UI events.
+   *
+   * Check the passed threading.Event object every 10ms to close the
+   * window if necessary.
+   */
+  static juce::Image openWindowAndCapture(juce::AudioProcessor &processor) {
+    bool shouldThrowErrorAlreadySet = false;
+
+    juce::Image img ;
+
+    JUCE_AUTORELEASEPOOL {
+      StandalonePluginWindow window(processor);
+      window.show();
+
+      int cycle_counter = 10 ;
+      int COUNTER_LIMIT = 1;
+
+      // Run in a tight loop so that we don't have to call ->stopDispatchLoop(),
+      // which causes the MessageManager to become unusable in the future.
+      // The window can be closed by sending a KeyboardInterrupt, closing
+      // the window in the UI, or setting the provided Event object.
+      while (window.isVisible() && cycle_counter<COUNTER_LIMIT) {
+        bool errorThrown = PyErr_CheckSignals() != 0;
+
+        if (errorThrown) {
+          window.closeButtonPressed();
+          shouldThrowErrorAlreadySet = errorThrown;
+          break;
+        }
+
+        {
+          // Release the GIL to allow other Python threads to run in the
+          // background while we the UI is running:
+          py::gil_scoped_release release;
+          juce::MessageManager::getInstance()->runDispatchLoopUntil(10);
+        }
+        
+        if(cycle_counter==COUNTER_LIMIT-1) {
+          // juce::AudioProcessorEditor* editor = processor.createEditorIfNeeded();
+          // int width = editor->getWidth();
+          // int height = editor->getHeight();
+          // img = juce::Image(juce::Image::PixelFormat::RGB, width, height, true);
+          // juce::Graphics graphics = juce::Graphics(img);
+          // editor->paint(graphics);
+
+
+          juce::AudioProcessorEditor* editor = processor.getActiveEditor();
+          //processor.updateHostDisplay();
+          //editor->setOpaque(true);
+          editor->toFront(false);
+          juce::ComponentPeer* peer = editor->getPeer();
+          if(peer!=nullptr) {
+            img = juce::createSnapshotOfNativeWindow(peer->getNativeHandle());
+            std::cout << "CAPTURED natived window" << std::endl ;
+          }
+          else { 
+            std::cout << "NO PEER FOUND" << std::endl ;
+            img = juce::Image() ;
+          }
+
+          // juce::AudioProcessorEditor* editor = processor.getActiveEditor();
+          // int width = editor->getWidth();
+          // int height = editor->getHeight();
+          // img = juce::Image(juce::Image::PixelFormat::RGB, width, height, true);
+          // juce::Graphics graphics = juce::Graphics(img);
+          // editor->paintEntireComponent(graphics,true);
+
+          // juce::AudioProcessorEditor* editor = processor.getActiveEditor();
+          // img = editor->createComponentSnapshot(editor->getLocalBounds());
+        }
+        cycle_counter++;
+      }
+    }
+
+    // Once the Autorelease pool has been drained, pump the dispatch loop one
+    // more time to process any window close events:
+    juce::MessageManager::getInstance()->runDispatchLoopUntil(10);
+
+    if (shouldThrowErrorAlreadySet) {
+      throw py::error_already_set();
+    }
+
+    return img ;
+  }  
+
   void closeButtonPressed() override { setVisible(false); }
 
   ~StandalonePluginWindow() override { clearContentComponent(); }
@@ -1310,6 +1398,26 @@ public:
     StandalonePluginWindow::openWindowAndWait(*pluginInstance, optionalEvent);
   }
 
+  juce::Image captureEditor() {
+    if (!pluginInstance) {
+      throw std::runtime_error(
+          "Editor cannot be shown - plugin not loaded. This is an internal "
+          "Pedalboard error and should be reported.");
+    }
+
+    if (!juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()) {
+      throw std::runtime_error(
+          "Editor cannot be shown - no visual display devices available.");
+    }
+
+    if (!juce::MessageManager::getInstance()->isThisTheMessageThread()) {
+      throw std::runtime_error(
+          "Plugin UI windows can only be shown from the main thread.");
+    }
+
+    return StandalonePluginWindow::openWindowAndCapture(*pluginInstance);
+  }  
+
 
   py::array_t<uint8> capture() {
 
@@ -1318,21 +1426,24 @@ public:
     py::array_t<uint8_t> outputArray ;
 
     if (pluginInstance) {
-      //juce::AudioProcessorEditor* editor = pluginInstance->createEditorIfNeeded();
-      // int width = editor->getWidth();
-      // int height = editor->getHeight();
-      
       // attempt 1
+      //juce::AudioProcessorEditor* editor = pluginInstance->createEditorIfNeeded();
+      //int width = editor->getWidth();
+      //int height = editor->getHeight();
       //juce::Rectangle rect = juce::Rectangle(0,0,width,height);
       //juce::Image img = editor->createComponentSnapshot(rect);
 
       // attempt 2
+      //juce::AudioProcessorEditor* editor = pluginInstance->createEditorIfNeeded();
+      //int width = editor->getWidth();
+      //int height = editor->getHeight();
       //juce::Image img = juce::Image(juce::Image::PixelFormat::RGB, width, height, true);
       //juce::Graphics graphics = juce::Graphics(img);
       //editor->paintEntireComponent(graphics,true);
       //editor->repaint();
       //juce::MessageManager::getInstance()->runDispatchLoopUntil(10);
 
+/*
       // attempt3
       //COmponent::createNewPeer
       juce::Image img ;
@@ -1352,15 +1463,21 @@ public:
       else { 
         std::cout << "NO PEER FOUND" << std::endl ;
         return outputArray;
-      }      
+      }  
+*/ 
 
       // attempt4
+      juce::Image img = this->captureEditor();
+      int width = img.getWidth();
+      int height = img.getHeight();      
+
+      // attempt5
+      // juce::AudioProcessorEditor* editor = pluginInstance->createEditorIfNeeded();
+      // int width = editor->getWidth();
+      // int height = editor->getHeight();
       // juce::Image img = juce::Image(juce::Image::PixelFormat::RGB, width, height, true);
       // juce::Graphics graphics = juce::Graphics(img);
       // editor->paint(graphics);
-
-      int width = img.getWidth();
-      int height = img.getHeight();
 
       juce::Image::BitmapData bm_data = juce::Image::BitmapData(img,juce::Image::BitmapData::ReadWriteMode::readOnly);
 
