@@ -492,7 +492,7 @@ public:
           juce::ComponentPeer* peer = editor->getPeer();
           if(peer!=nullptr) {
             img = juce::createSnapshotOfNativeWindow(peer->getNativeHandle());
-            std::cout << "CAPTURED natived window" << std::endl ;
+            std::cout << "CAPTURED native window" << std::endl ;
           }
           else { 
             std::cout << "NO PEER FOUND" << std::endl ;
