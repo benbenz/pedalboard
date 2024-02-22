@@ -453,8 +453,8 @@ public:
       StandalonePluginWindow window(processor);
       window.show();
 
-      int cycle_counter = 10 ;
-      int COUNTER_LIMIT = 1;
+      int cycle_counter = 0 ;
+      int COUNTER_LIMIT = 10;
 
       // Run in a tight loop so that we don't have to call ->stopDispatchLoop(),
       // which causes the MessageManager to become unusable in the future.
@@ -486,7 +486,7 @@ public:
 
 
           juce::AudioProcessorEditor* editor = processor.getActiveEditor();
-          //processor.updateHostDisplay();
+          processor.updateHostDisplay();
           //editor->setOpaque(true);
           editor->toFront(false);
           juce::ComponentPeer* peer = editor->getPeer();
