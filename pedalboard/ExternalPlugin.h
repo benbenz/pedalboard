@@ -454,7 +454,7 @@ public:
       window.show();
 
       int cycle_counter = 0 ;
-      int COUNTER_LIMIT = 20;
+      int COUNTER_LIMIT = 50;
 
       // Run in a tight loop so that we don't have to call ->stopDispatchLoop(),
       // which causes the MessageManager to become unusable in the future.
