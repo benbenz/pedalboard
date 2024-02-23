@@ -25,7 +25,9 @@
 
 #include "../BufferUtils.h"
 #include "../JuceHeader.h"
+#include "juce_audio_formats/juce_audio_formats.h"
 #include "../juce_overrides/juce_PatchedMP3AudioFormat.h"
+
 #include "AudioFile.h"
 #include "PythonInputStream.h"
 

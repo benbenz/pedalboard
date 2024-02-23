@@ -86,8 +86,8 @@ namespace juce {
 namespace PatchedFlacNamespace {
 #if JUCE_INCLUDE_FLAC_CODE || !defined(JUCE_INCLUDE_FLAC_CODE)
 
-#undef VERSION
-#define VERSION "1.3.1"
+#undef PACKAGE_VERSION
+#define PACKAGE_VERSION "1.3.1"
 
 #define FLAC__NO_DLL 1
 
@@ -210,7 +210,7 @@ public:
                       false, true);
   }
 
-  bool readSamples(int **destSamples, int numDestChannels,
+  bool readSamples(int* const*destSamples, int numDestChannels,
                    int startOffsetInDestBuffer, int64 startSampleInFile,
                    int numSamples) override {
     if (!ok)
