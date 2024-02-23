@@ -15,7 +15,7 @@
 
 
 This is a fork of the original pedalboard repository:
-- extra plugin format implentation
+- extra plugin format implementation
 - upgrade JUCE to 7.0.10
 - exposed extra methods/properties:
   - plugin current program name
