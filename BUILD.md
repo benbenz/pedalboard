@@ -22,3 +22,12 @@ python setup.py sdist
 python setup.py bdist_wheel
 python -m twine upload dist/*
 ```
+
+
+# DEBUG
+
+- build with debug: `rm -rf build && DEBUG=1 python3 setup.py build_ext --inplace`
+- import the debug binary into telemann: `pip install -r requirements-dev.txt `
+- run the telemann server: (in telemann directory) `python src/manage.py runserver --nothreading --noreload`
+- attach the process by running the VS Code "attach to server" debug configuration
+- search for "python" and attach to the python process with manage.py (matching the telemann server)
