@@ -13,3 +13,4 @@
 [submodule "JUCE_benbenz"]
 	path = JUCE_benbenz
 	url = https://github.com/benbenz/JUCE.git
+	branch = v6.1.4-patched
