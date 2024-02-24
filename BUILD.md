@@ -31,3 +31,4 @@ python -m twine upload dist/*
 - run the telemann server: (in telemann directory) `python src/manage.py runserver --nothreading --noreload`
 - attach the process by running the VS Code "attach to server" debug configuration
 - search for "python" and attach to the python process with manage.py (matching the telemann server)
+- go to the pages of telemann to trigger the debug breakpoints
