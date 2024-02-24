@@ -10,3 +10,6 @@
 [submodule "vendors/libgsm"]
 	path = vendors/libgsm
 	url = https://github.com/timothytylee/libgsm.git
+[submodule "JUCE_benbenz"]
+	path = JUCE_benbenz
+	url = https://github.com/benbenz/JUCE.git
