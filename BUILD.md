@@ -10,13 +10,6 @@ source .venv/bin/activate
 pip3 install pybind11 tox
 
 # BUILD
-export CC=/Users/ben/Dev/llvm/clang+llvm-17.0.1-arm64-apple-darwin22.0/bin/clang
-export CXX=/Users/ben/Dev/llvm/clang+llvm-17.0.1-arm64-apple-darwin22.0/bin/clang++
-export DYLD_LIBRARY_PATH=/Users/ben/Dev/llvm/clang+llvm-17.0.1-arm64-apple-darwin22.0/lib
-export LD_LIBRARY_PATH=/Users/ben/Dev/llvm/clang+llvm-17.0.1-arm64-apple-darwin22.0/lib
-export LD=/Users/ben/Dev/llvm/clang+llvm-17.0.1-arm64-apple-darwin22.0/bin/ld64.lld
-export LINKXX=/Users/ben/Dev/llvm/clang+llvm-17.0.1-arm64-apple-darwin22.0/bin/clang++
-export LINK=/Users/ben/Dev/llvm/clang+llvm-17.0.1-arm64-apple-darwin22.0/bin/clang
 pip3 install .
 # OR
 python3 setup.py build_ext --inplace
@@ -29,3 +22,13 @@ python setup.py sdist
 python setup.py bdist_wheel
 python -m twine upload dist/*
 ```
+
+
+# DEBUG
+
+- build with debug: `rm -rf build && DEBUG=1 python3 setup.py build_ext --inplace`
+- import the debug binary into telemann: `pip install -r requirements-dev.txt `
+- run the telemann server: (in telemann directory) `python src/manage.py runserver --nothreading --noreload`
+- attach the process by running the VS Code "attach to server" debug configuration
+- search for "python" and attach to the python process with manage.py (matching the telemann server)
+- go to the pages of telemann to trigger the debug breakpoints
