@@ -28,16 +28,16 @@
 
 #include "juce_PatchedVST3PluginFormat.h"
 
-#include "../../JUCE/modules/juce_audio_processors/juce_audio_processors.h"
+#include "juce_audio_processors/juce_audio_processors.h"
 
-#include "../../JUCE/modules/juce_core/native/juce_BasicNativeHeaders.h"
+#include "juce_core/native/juce_BasicNativeHeaders.h"
 
-#include "../../JUCE/modules/juce_core/juce_core.h"
-#include "../../JUCE/modules/juce_gui_basics/juce_gui_basics.h"
-#include "../../JUCE/modules/juce_gui_extra/juce_gui_extra.h"
+#include "juce_core/juce_core.h"
+#include "juce_gui_basics/juce_gui_basics.h"
+#include "juce_gui_extra/juce_gui_extra.h"
 
 #if JUCE_MAC
-#include "../../JUCE/modules/juce_core/native/juce_mac_ObjCHelpers.h"
+#include "juce_core/native/juce_mac_ObjCHelpers.h"
 #endif
 
 #if (JUCE_LINUX || JUCE_BSD)
@@ -47,9 +47,9 @@
 #undef KeyPress
 #endif
 
-#include "../../JUCE/modules/juce_audio_processors/format_types/juce_VST3Headers.h"
+#include "juce_audio_processors/format_types/juce_VST3Headers.h"
 
-#include "../../JUCE/modules/juce_audio_processors/format_types/juce_VST3Common.h"
+#include "juce_audio_processors/format_types/juce_VST3Common.h"
 
 namespace juce {
 

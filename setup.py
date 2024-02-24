@@ -78,7 +78,7 @@ ALL_CPPFLAGS.extend(
         "-DJUCE_MODAL_LOOPS_PERMITTED=1",
     ]
 )
-ALL_INCLUDES.extend(["JUCE_benbenz/modules/", "JUCE/modules/juce_audio_processors/format_types/VST3_SDK/", "vstsdk2.4"])
+ALL_INCLUDES.extend(["JUCE_benbenz/modules/", "JUCE_benbenz/modules/juce_audio_processors/format_types/VST3_SDK/", "vstsdk2.4"])
 
 if "musllinux" in os.getenv("CIBW_BUILD", ""):
     # For Alpine/musllinux compatibility:
