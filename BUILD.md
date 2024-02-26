@@ -23,6 +23,7 @@ python setup.py bdist_wheel
 python -m twine upload dist/*
 ```
 
+If problem switching with GitHub Desktop between JUCE7 branch and master, run git status at the root. 
 
 # DEBUG
 
@@ -32,3 +33,5 @@ python -m twine upload dist/*
 - attach the process by running the VS Code "attach to server" debug configuration
 - search for "python" and attach to the python process with manage.py (matching the telemann server)
 - go to the pages of telemann to trigger the debug breakpoints
+
+Note: if the breakpoints disappear after attaching to server, it is likely that you havent copied the right binary into the telemann dependencies.
