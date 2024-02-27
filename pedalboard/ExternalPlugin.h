@@ -1986,7 +1986,7 @@ example: a Windows VST plugin bundle will not load on Linux or macOS.)
            "Capture the plugin window")         
       .def_readwrite(
           "_reload_type",
-          &ExternalPlugin<juce::PatchedVSTPluginFormat>::reloadType,
+          &ExternalPlugin<juce::VSTPluginFormat>::reloadType,
           "The behavior that this plugin exhibits when .reset() is called. "
           "This is an internal attribute which gets set on plugin "
           "instantiation and should only be accessed for debugging and "
