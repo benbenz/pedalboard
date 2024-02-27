@@ -353,10 +353,8 @@ class ExternalPlugin(Plugin):
     @typing.overload
     def __call__(
         self,
-        midi_messages: object,
-        duration: float,
+        input_array: numpy.ndarray,
         sample_rate: float,
-        num_channels: int = 2,
         buffer_size: int = 8192,
         reset: bool = True,
     ) -> numpy.ndarray[typing.Any, numpy.dtype[numpy.float32]]:
@@ -368,8 +366,10 @@ class ExternalPlugin(Plugin):
     @typing.overload
     def __call__(
         self,
-        input_array: numpy.ndarray,
+        midi_messages: object,
+        duration: float,
         sample_rate: float,
+        num_channels: int = 2,
         buffer_size: int = 8192,
         reset: bool = True,
     ) -> numpy.ndarray[typing.Any, numpy.dtype[numpy.float32]]: ...
@@ -945,16 +945,23 @@ class AudioUnitPlugin(ExternalPlugin):
     For a plugin wrapper that works on Windows and Linux as well,
     see :class:`pedalboard.VST3Plugin`.)
 
+    .. warning::
+        Some Audio Unit plugins may throw errors, hang, generate incorrect output, or
+        outright crash if called from background threads. If you find that a Audio Unit
+        plugin is not working as expected, try calling it from the main thread
+        instead and `open a GitHub Issue to track the incompatibility
+        <https://github.com/spotify/pedalboard/issues/new>`_.
+
     *Support for instrument plugins introduced in v0.7.4.*
+
+    *Support for running Audio Unit plugins on background threads introduced in v0.8.8.*
     """
 
     @typing.overload
     def __call__(
         self,
-        midi_messages: object,
-        duration: float,
+        input_array: numpy.ndarray,
         sample_rate: float,
-        num_channels: int = 2,
         buffer_size: int = 8192,
         reset: bool = True,
     ) -> numpy.ndarray[typing.Any, numpy.dtype[numpy.float32]]:
@@ -966,8 +973,10 @@ class AudioUnitPlugin(ExternalPlugin):
     @typing.overload
     def __call__(
         self,
-        input_array: numpy.ndarray,
+        midi_messages: object,
+        duration: float,
         sample_rate: float,
+        num_channels: int = 2,
         buffer_size: int = 8192,
         reset: bool = True,
     ) -> numpy.ndarray[typing.Any, numpy.dtype[numpy.float32]]: ...
@@ -990,10 +999,8 @@ class AudioUnitPlugin(ExternalPlugin):
     @typing.overload
     def process(
         self,
-        midi_messages: object,
-        duration: float,
+        input_array: numpy.ndarray,
         sample_rate: float,
-        num_channels: int = 2,
         buffer_size: int = 8192,
         reset: bool = True,
     ) -> numpy.ndarray[typing.Any, numpy.dtype[numpy.float32]]:
@@ -1168,8 +1175,10 @@ class AudioUnitPlugin(ExternalPlugin):
     @typing.overload
     def process(
         self,
-        input_array: numpy.ndarray,
+        midi_messages: object,
+        duration: float,
         sample_rate: float,
+        num_channels: int = 2,
         buffer_size: int = 8192,
         reset: bool = True,
     ) -> numpy.ndarray[typing.Any, numpy.dtype[numpy.float32]]: ...
@@ -1208,6 +1217,18 @@ class AudioUnitPlugin(ExternalPlugin):
     @property
     def _parameters(self) -> typing.List[_AudioProcessorParameter]:
         """ """
+    @property
+    def _reload_type(self) -> ExternalPluginReloadType:
+        """
+        The behavior that this plugin exhibits when .reset() is called. This is an internal attribute which gets set on plugin instantiation and should only be accessed for debugging and testing.
+
+
+        """
+    @_reload_type.setter
+    def _reload_type(self, arg0: ExternalPluginReloadType) -> None:
+        """
+        The behavior that this plugin exhibits when .reset() is called. This is an internal attribute which gets set on plugin instantiation and should only be accessed for debugging and testing.
+        """
     @property
     def name(self) -> str:
         """
@@ -1384,7 +1405,17 @@ class VST3Plugin(ExternalPlugin):
     build of each plugin is required to load that plugin on a given platform. (For
     example: a Windows VST3 plugin bundle will not load on Linux or macOS.)
 
+    .. warning::
+        Some VST3® plugins may throw errors, hang, generate incorrect output, or
+        outright crash if called from background threads. If you find that a VST3®
+        plugin is not working as expected, try calling it from the main thread
+        instead and `open a GitHub Issue to track the incompatibility
+        <https://github.com/spotify/pedalboard/issues/new>`_.
+
+
     *Support for instrument plugins introduced in v0.7.4.*
+
+    *Support for running VST3® plugins on background threads introduced in v0.8.8.*
     """
 
     @typing.overload
@@ -1649,6 +1680,18 @@ class VST3Plugin(ExternalPlugin):
     @property
     def _parameters(self) -> typing.List[_AudioProcessorParameter]:
         """ """
+    @property
+    def _reload_type(self) -> ExternalPluginReloadType:
+        """
+        The behavior that this plugin exhibits when .reset() is called. This is an internal attribute which gets set on plugin instantiation and should only be accessed for debugging and testing.
+
+
+        """
+    @_reload_type.setter
+    def _reload_type(self, arg0: ExternalPluginReloadType) -> None:
+        """
+        The behavior that this plugin exhibits when .reset() is called. This is an internal attribute which gets set on plugin instantiation and should only be accessed for debugging and testing.
+        """
     @property
     def name(self) -> str:
         """
